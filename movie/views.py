@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+import matplotlib.pyplot as plt
 
 from .models import Movie, Review
 
@@ -60,3 +62,25 @@ def deletereview(request, review_id):
     review = get_object_or_404(Review, pk=review_id, user=request.user)
     review.delete()
     return redirect('detail', review.movie.id)
+
+
+def movies_by_year():
+    movies = Movie.objects.values('year').annotate(total=Count('id'))
+    return movies
+
+def prepare_data():
+    movies = movies_by_year()
+    years = [movie['year'] for movie in movies]
+    totals = [movie['total'] for movie in movies]
+    print(years)
+    print(totals)
+    return years, totals
+
+def plot_movies_by_year(request):
+    years, totals = prepare_data()
+    plt.bar(years, totals)
+    plt.xlabel('Año')
+    plt.ylabel('Cantidad de películas')
+    plt.title('Cantidad de películas por año')
+    plt.grid(True)
+    plt.show()
